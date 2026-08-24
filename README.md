@@ -9,7 +9,14 @@ A production-ready, full-stack web application that transforms raw meeting audio
 
 
 <div align="center">
-  <video src="https://github.com/Agent9777/Ai-meeting-summarizer.git/Output.mp4" autoplay loop muted playsinline width="100%" style="border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+  <video
+    src="https://raw.githubusercontent.com/Agent9777/Ai-meeting-summarizer/main/Output.mp4"
+    autoplay
+    loop
+    muted
+    playsinline
+    width="100%"
+    style="border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
     Your browser does not support the video tag.
   </video>
 </div>
