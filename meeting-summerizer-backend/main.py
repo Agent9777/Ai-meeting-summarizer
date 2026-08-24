@@ -8,33 +8,31 @@ from pydantic import BaseModel, Field
 from typing import List
 from dotenv import load_dotenv
 
-# Import the official Google GenAI SDK
+
 from google import genai
 from google.genai import types
 
-# Load environment variables from the .env file
+
 load_dotenv()
 
-# Initialize FastAPI app
+
 app = FastAPI(title="Meeting Summarizer API (Pure Gemini)")
 
-# Allow the frontend to communicate with this backend
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Change to your frontend's domain in production
+    allow_origins=["*"], 
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Initialize Gemini Client 
+
 try:
     client = genai.Client()
 except Exception as e:
     print(f"Failed to initialize Gemini Client: {e}")
 
-# ---------------------------------------------------------
-# 1. Define the Structured Output Schema using Pydantic
-# ---------------------------------------------------------
+
 class DialogueTurn(BaseModel):
     speaker_label: str = Field(description="The generic label, e.g., 'Speaker A'")
     speaker_name: str = Field(description="The actual name if mentioned, otherwise use the generic label")
@@ -51,12 +49,10 @@ class MeetingAnalysis(BaseModel):
     action_items: List[ActionItem] = Field(description="Key tasks and decisions made")
     transcript_with_metadata: List[DialogueTurn] = Field(description="The full transcription grouped by speaker turns")
 
-# ---------------------------------------------------------
-# 2. API Endpoint
-# ---------------------------------------------------------
+
 @app.post("/upload-audio")
 async def process_meeting_audio(file: UploadFile = File(...)):
-    # Validate that the file is an audio type
+
     if not file.content_type.startswith("audio/"):
         raise HTTPException(status_code=400, detail="File must be an audio format.")
 
@@ -64,7 +60,7 @@ async def process_meeting_audio(file: UploadFile = File(...)):
     uploaded_audio = None
     
     try:
-        # Save the uploaded file temporarily so the SDK can read it
+
         extension = os.path.splitext(file.filename)[1] or ".mp3"
         with tempfile.NamedTemporaryFile(delete=False, suffix=extension) as temp_audio:
             content = await file.read()
@@ -74,7 +70,6 @@ async def process_meeting_audio(file: UploadFile = File(...)):
         print("1. Uploading audio to Gemini File API...")
         uploaded_audio = client.files.upload(file=temp_file_path)
 
-        # Large audio files might take a few seconds to process on Google's end
         print("2. Waiting for audio processing...")
         while uploaded_audio.state.name == "PROCESSING":
             time.sleep(2)
@@ -92,7 +87,6 @@ async def process_meeting_audio(file: UploadFile = File(...)):
         Generate a whole meeting summary and a list of actionable items.
         """
 
-        # Call Gemini (using 1.5-flash for maximum stability with JSON generation)
         response = client.models.generate_content(
             model='gemini-3.6-flash',
             contents=[prompt, uploaded_audio],
@@ -105,7 +99,7 @@ async def process_meeting_audio(file: UploadFile = File(...)):
         
         print("4. Done! Formatting data for frontend.")
         
-        # Clean up the text in case Gemini wraps the JSON in markdown code blocks
+        
         clean_text = response.text.strip()
         if clean_text.startswith("```json"):
             clean_text = clean_text.removeprefix("```json")
@@ -115,7 +109,6 @@ async def process_meeting_audio(file: UploadFile = File(...)):
             clean_text = clean_text.removesuffix("```")
         clean_text = clean_text.strip()
 
-        # Parse and return in the exact format your Next.js frontend expects
         parsed_result = json.loads(clean_text)
         
         return {
@@ -125,11 +118,11 @@ async def process_meeting_audio(file: UploadFile = File(...)):
 
     except Exception as e:
         # This will print the EXACT reason it crashed in your terminal
-        print(f"\n🔥 THE EXACT ERROR IS: {str(e)}\n")
+        print(f"\n ERROR: {str(e)}\n")
         raise HTTPException(status_code=500, detail=f"AI Processing Error: {str(e)}")
     
     finally:
-        # Clean up the file from Google's servers to manage your quota
+
         if uploaded_audio:
             try:
                 client.files.delete(name=uploaded_audio.name)

@@ -1,3 +1,5 @@
 meeting-summerizer-backend/.env
 
 meeting-summerizer-frontend/.env
+meeting-summerizer-frontend/node_modules
+meeting-summerizer-frontend/.next
