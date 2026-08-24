@@ -20,6 +20,7 @@ A production-ready, full-stack web application that transforms raw meeting audio
     Your browser does not support the video tag.
   </video>
 </div>
+    Open Output.mp4 file to see the live demonstration
 
 ---
 
